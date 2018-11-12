@@ -13,5 +13,44 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:6.4.2
     container_name: logstash
-    links:
+    depends_on:
       - redis
+    volumes:
+      - ./client/config:/config
+      - ./client/logs:/logs
+    environment:
+      - JAVACMD=/usr/bin/java
+      - LS_SETTINGS_DIR=/config
+      - SERVICE_NAME=logstash
+      - SERVICE_DESCRIPTION=logstash
+    entrypoint:
+      - /usr/share/logstash/bin/logstash
+
+  esdatanode1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: esdatanode1
+    volumes:
+      - ./esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - node.data = true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+    esingestnode1:
+      image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+      container_name: esingestnode1
+      ports:
+        - 9200:9200
+
+
+
+volumes:
+  esdata1:
+    driver: local
+
