@@ -1,18 +1,9 @@
 version: "3"
 services:
 
-  redis:
-    image: redis
-    ports:
-      - "6379:6379"
-    expose:
-      - 6379
-    container_name:
-      myrediscont
-
-  logstash:
+  logstash-client:
     image: docker.elastic.co/logstash/logstash:6.4.2
-    container_name: logstash
+    container_name: logstash-client
     depends_on:
       - redis
     volumes:
@@ -26,22 +17,60 @@ services:
     entrypoint:
       - /usr/share/logstash/bin/logstash
 
-  esdatanode1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
-    container_name: esdatanode1
+  redis:
+    image: redis
+    expose:
+      - 6379
+    container_name:
+      myrediscont
+
+  logstash-ingest:
+    image: docker.elastic.co/logstash/logstash:6.4.2
+    container_name: logstash-ingest
+    depends_on:
+      - redis
     volumes:
-      - ./esdata1:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
+      - ./ingest/config:/config
+    environment:
+      - JAVACMD=/usr/bin/java
+      - LS_SETTINGS_DIR=/config
+      - SERVICE_NAME=logstash
+      - SERVICE_DESCRIPTION=logstash
+    entrypoint:
+      - /usr/share/logstash/bin/logstash
+
+  elasticsearch-ingest:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch-ingest
+    expose:
+      - 9200
+      - 9300
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-data-1"
+      - node.master=true
+      - node.ingest=true
+      - node.data=false
 
-volumes:
-  esdata1:
-    driver: local
+  elasticsearch-data-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch-data-1
+    expose:
+      - 9200
+      - 9300
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest"
+      - node.master=false
+      - node.ingest=false
+      - node.data=true
 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.4.3
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - "ELASTICSEARCH_URL=http://elasticsearch-data-1:9200"
