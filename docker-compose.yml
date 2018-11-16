@@ -39,17 +39,31 @@ services:
     entrypoint:
       - /usr/share/logstash/bin/logstash
 
-  elasticsearch-ingest:
+  elasticsearch-ingest-1:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
-    container_name: elasticsearch-ingest
+    container_name: elasticsearch-ingest-1
     expose:
       - 9200
       - 9300
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-      - "discovery.zen.ping.unicast.hosts=elasticsearch-data-1"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-data-1,elasticsearch-data-2,elasticsearch-data-3"
       - node.master=true
+      - node.ingest=true
+      - node.data=false
+
+  elasticsearch-ingest-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch-ingest-2
+    expose:
+      - 9200
+      - 9300
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-data-1,elasticsearch-data-2,elasticsearch-data-3"
+      - node.master=false
       - node.ingest=true
       - node.data=false
 
@@ -62,7 +76,7 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1,elasticsearch-ingest-2"
       - node.master=false
       - node.ingest=false
       - node.data=true
@@ -76,7 +90,7 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1,elasticsearch-ingest-2"
       - node.master=false
       - node.ingest=false
       - node.data=true
@@ -90,7 +104,7 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1,elasticsearch-ingest-2"
       - node.master=false
       - node.ingest=false
       - node.data=true
