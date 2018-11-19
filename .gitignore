@@ -25,3 +25,4 @@ client/logs/*
 !client/logs/.gitkeep
 esdatanode1    
 .DS_Store
+docker-compose1.yml

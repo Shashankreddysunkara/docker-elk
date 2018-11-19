@@ -2,7 +2,7 @@ version: "3"
 services:
 
   logstash-client:
-    image: docker.elastic.co/logstash/logstash:${ES_TAG}
+    image: docker.elastic.co/logstash/logstash:6.4.2
     container_name: logstash-client
     depends_on:
       - redis
@@ -25,7 +25,7 @@ services:
       myrediscont
 
   logstash-ingest:
-    image: docker.elastic.co/logstash/logstash:${ES_TAG}
+    image: docker.elastic.co/logstash/logstash:6.4.2
     container_name: logstash-ingest
     depends_on:
       - redis
@@ -40,7 +40,7 @@ services:
       - /usr/share/logstash/bin/logstash
 
   elasticsearch-ingest-1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_TAG}
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
     container_name: elasticsearch-ingest-1
     expose:
       - 9200
@@ -48,13 +48,13 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-2"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-data-1,elasticsearch-data-2,elasticsearch-data-3"
       - node.master=true
       - node.ingest=true
       - node.data=false
 
   elasticsearch-ingest-2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_TAG}
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
     container_name: elasticsearch-ingest-2
     expose:
       - 9200
@@ -62,13 +62,42 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - cluster.name=elasticsearch
-      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-data-1,elasticsearch-data-2,elasticsearch-data-3"
       - node.master=false
       - node.ingest=true
       - node.data=false
 
-  elasticsearch-data:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_TAG}
+  elasticsearch-data-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch-data-1
+    expose:
+      - 9200
+      - 9300
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1,elasticsearch-ingest-2"
+      - node.master=false
+      - node.ingest=false
+      - node.data=true
+
+  elasticsearch-data-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch-data-2
+    expose:
+      - 9200
+      - 9300
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1,elasticsearch-ingest-2"
+      - node.master=false
+      - node.ingest=false
+      - node.data=true
+
+  elasticsearch-data-3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch-data-3
     expose:
       - 9200
       - 9300
@@ -81,13 +110,9 @@ services:
       - node.data=true
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${ES_TAG}
+    image: docker.elastic.co/kibana/kibana:6.4.3
     container_name: kibana
-    depends_on:
-      - redis
-      - logstash-client
-      - logstash-ingest
     ports:
       - "5601:5601"
     environment:
-      - "ELASTICSEARCH_URL=http://elasticsearch-data:9200"
+      - "ELASTICSEARCH_URL=http://elasticsearch-data-1:9200"
