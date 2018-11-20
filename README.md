@@ -1,7 +1,8 @@
 
 # docker-elk
 
-This is a placeholder README.md for a new repository
+### Running the stack
+docker-compose up --scale elasticsearch-data=`<number of data nodes>`
 
 ### License
 

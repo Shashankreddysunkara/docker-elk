@@ -80,6 +80,19 @@ services:
       - node.ingest=false
       - node.data=true
 
+  elasticsearch-query:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_TAG}
+    expose:
+      - 9200
+      - 9300
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest-1,elasticsearch-ingest-2"
+      - node.master=false
+      - node.ingest=false
+      - node.data=false
+
   kibana:
     image: docker.elastic.co/kibana/kibana:${ES_TAG}
     container_name: kibana
@@ -90,4 +103,4 @@ services:
     ports:
       - "5601:5601"
     environment:
-      - "ELASTICSEARCH_URL=http://elasticsearch-data:9200"
+      - "ELASTICSEARCH_URL=http://elasticsearch-query:9200"
