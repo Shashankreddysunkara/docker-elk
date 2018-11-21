@@ -2,7 +2,7 @@
 # docker-elk
 
 ## Overview
-Complete functional replica of an ELK Stack used in the MDTP Platform built in docker-compose to allow quick testing of the stack.
+Complete functional replica of an ELK Stack used on the MDTP Platform built in docker-compose to allow quick testing of the tech stack.
 
 ### Environment Variables
 The provided .env file sets the ELK version used by the corresponding docker images and needs to be sourced before running the stack. The version number can be adjusted as required by setting the variable:
@@ -26,6 +26,8 @@ When composed, the kibana app can be accessed by visiting localhost:5601 in a br
 Once the stack is running, logs can be fed in by adding .log files in the directory client/logs.
 
 Indicies can then be created in the management panel of kibana
+
+The logs fed into the system should display up within the discover panel of kibana.
 
 ### Healthcheck
 In a seperate terminal, the kibana shell can be accessed and within this a healthcheck can be curled, running the commands:
@@ -55,7 +57,7 @@ The response should contain a json similar to below, showing the total nodes wit
 }
 ```
 
-Alternatively via the kibana app, by enabling monitoring in the corresponding panel which will also show information about the elasticsearch cluster
+Alternatively via the kibana app, by enabling monitoring in the corresponding panel,will also show health information about the elasticsearch cluster
 
 ### License
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
