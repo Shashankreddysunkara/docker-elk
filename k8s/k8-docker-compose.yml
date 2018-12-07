@@ -1,0 +1,67 @@
+version: "3"
+services:
+
+  logstash-client:
+    image: docker.elastic.co/logstash/logstash:6.5.0
+    volumes:
+      - ./client/config:/config
+      - ./client/logs:/logs
+    environment:
+      - JAVACMD=/usr/bin/java
+      - LS_SETTINGS_DIR=/config
+      - SERVICE_NAME=logstash
+      - SERVICE_DESCRIPTION=logstash
+    entrypoint:
+      - /usr/share/logstash/bin/logstash
+
+  redis:
+    image: redis
+
+  logstash-ingest:
+    image: docker.elastic.co/logstash/logstash:6.5.0
+    volumes:
+      - ./ingest/config:/config
+    environment:
+      - JAVACMD=/usr/bin/java
+      - LS_SETTINGS_DIR=/config
+      - SERVICE_NAME=logstash
+      - SERVICE_DESCRIPTION=logstash
+    entrypoint:
+      - /usr/share/logstash/bin/logstash
+
+  elasticsearch-ingest:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-data"
+      - node.master=true
+      - node.ingest=true
+      - node.data=false
+
+  elasticsearch-data:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest"
+      - node.master=false
+      - node.ingest=false
+      - node.data=true
+
+  elasticsearch-query:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+    environment:
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - cluster.name=elasticsearch
+      - "discovery.zen.ping.unicast.hosts=elasticsearch-ingest"
+      - node.master=false
+      - node.ingest=false
+      - node.data=false
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.5.0
+    ports:
+      - "5601:5601"
+    environment:
+      - "ELASTICSEARCH_URL=http://elasticsearch-query:9200"
